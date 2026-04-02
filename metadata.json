@@ -1,0 +1,5 @@
+{
+  "name": "ClinicPro Management System",
+  "description": "A comprehensive clinic management system for tracking patients, appointments, and medical records with a local SQLite database.",
+  "requestFramePermissions": []
+}
