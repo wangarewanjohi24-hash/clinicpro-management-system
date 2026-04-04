@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as db from './db';
+import { Server } from 'tls';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,8 +97,8 @@ async function initDb() {
       diagnosis TEXT,
       treatment_plan TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+    );`);
+  
 
   // Migration: Ensure service_id exists in appointments
   try {
@@ -157,13 +158,14 @@ async function startServer() {
       return res.status(400).json({ error: "Invalid Name: Name must be at least 2 characters." });
     }
 
-    // 2. Format Checking (Ensure phone is a number)
+    // 2. Format Checking (contact) 
     const contactRegex = /^[0-9+]{10,15}$/;
     if (contact && !contactRegex.test(contact)) {
       return res.status(400).json({ error: "Invalid contact: Please enter a valid contact number." });
-      // Age Validation (Must be a reasonable number)
-      if (age !== undefined && (age < 0 || age > 120)) {
-        return res.status(400).json({ error: "Invalid Age: Must be between 0 and 120." });
+    }
+    // Age Validation (Must be a reasonable number)
+    if (age !== undefined && (age < 0 || age > 120)) {
+      return res.status(400).json({ error: "Invalid Age: Must be between 0 and 120." });
       }
 
       // Gender Validation (Restrict to specific options)
@@ -430,10 +432,10 @@ async function startServer() {
     });
   });
 
-  // --- Start Server ---
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(Server running on http://localhost:${PORT});
+    console.log(`Server running on http://localhost:${PORT}`);
   });
+} // Closes startServer
 
 // --- Start the System ---
 startServer();
@@ -441,13 +443,13 @@ startServer();
 // --- NFR: Global Audit Logging Function ---
 async function logAction(action: string, details: string) {
   try {
+    // We use backticks (`) to allow the SQL to span multiple lines safely
     await db.run(
-      INSERT INTO audit_logs (action, details) VALUES (?, ?),
+      `INSERT INTO audit_logs (action, details) VALUES (?, ?)`,
       [action, details]
     );
-    console.log([AUDIT]: ${action} - ${details});
+    console.log(`[AUDIT]: ${action} - ${details}`);
   } catch (error) {
-    console.error("Audit logging failed:", error);
+    console.error("Critical: Audit log failed", error);
   }
 }
-} 
