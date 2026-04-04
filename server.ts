@@ -24,7 +24,30 @@ async function initDb() {
       height REAL,
       medical_history TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    );`);
+    await db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_patient_name ON patients(name);
+
+    CREATE TABLE IF NOT EXISTS doctors(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    specialization TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+    CREATE TABLE IF NOT EXISTS audit_logs(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action TEXT,
+    details TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  `);
+           details TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    ');
+    
+    console.log("Non-Functional Requirement tables and indexes initialized.");
 
     CREATE TABLE IF NOT EXISTS doctors (
       id INTEGER PRIMARY KEY ${AUTO_INC},
@@ -134,16 +157,55 @@ async function startServer() {
   });
 
   app.post('/api/patients', async (req, res) => {
-    try {
-      const { name, age, gender, contact, blood_group, weight, height, medical_history } = req.body;
-      const result = await db.query('INSERT INTO patients (name, age, gender, contact, blood_group, weight, height, medical_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [name, age, gender, contact, blood_group, weight, height, medical_history]);
-      res.json({ id: db.getLastInsertId(result) });
-    } catch (error) {
-      console.error('Error adding patient:', error);
-      res.status(500).json({ error: 'Failed to add patient' });
+    const { name, age, gender, blood_group, weight, height, medical_history } = req.body;
+
+    if (!name || name.trim().length < 2) {
+      return res.status(400).json({ error: "Invalid Name: Name must be at least 2 characters." });
     }
-  });
+
+    // 2. Format Checking (Ensure phone is a number)
+    const contactRegex = /^[0-9+]{10,15}$/;
+    if (contact && !contactRegex.test(contact)) {
+      return res.status(400).json({ error: "Invalid contact: Please enter a valid contact number." });
+      // Age Validation (Must be a reasonable number)
+      if (age !== undefined && (age < 0 || age > 120)) {
+        return res.status(400).json({ error: "Invalid Age: Must be between 0 and 120." });
+      }
+
+      // Gender Validation (Restrict to specific options)
+      const validGenders = ['Male', 'Female', 'Other'];
+      if (gender && !validGenders.includes(gender)) {
+        return res.status(400).json({ error: "Invalid Gender: Please select Male, Female, or Other." });
+      }
+
+      // Blood Group Validation
+      const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+      if (blood_group && !validBloodGroups.includes(blood_group)) {
+        return res.status(400).json({ error: "Invalid Blood Group format." });
+      }
+
+      // Weight & Height (Must be positive numbers)
+      if (weight !== undefined && weight <= 0) {
+        return res.status(400).json({ error: "Weight must be a positive number." });
+      }
+      if (height !== undefined && height <= 0) {
+        return res.status(400).json({ error: "Height must be a positive number." });
+      }
+
+      // Medical History (Prevent dangerously long text)
+      if (medical_history && medical_history.length > 2000) {
+        return res.status(400).json({ error: "Medical history is too long (Max 2000 characters)." });
+      }
+      try {
+        const { name, age, gender, contact, blood_group, weight, height, medical_history } = req.body;
+        const result = await db.query('INSERT INTO patients (name, age, gender, contact, blood_group, weight, height, medical_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [name, age, gender, contact, blood_group, weight, height, medical_history]);
+        res.json({ id: db.getLastInsertId(result) });
+      } catch (error) {
+        console.error('Error adding patient:', error);
+        res.status(500).json({ error: 'Failed to add patient' });
+      }
+    });
 
   app.get('/api/patients/:id', async (req, res) => {
     try {
@@ -359,11 +421,19 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const _dirname = path.resolve();
-    app.use(express.static(path.join(_dirname,'dist')));
+    app.use(express.static(path.join(_dirname, 'dist')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(_dirname, 'dist', 'index.html'));
     });
   }
+  // Global Error Handler
+  app.use((err, req, res, next) => {
+    console.error("SERVER ERROR LOG:", err.stack); // Logs the error in your Render dashboard
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "The clinic system encountered an issue. Please try again later."
+    });
+  });
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
