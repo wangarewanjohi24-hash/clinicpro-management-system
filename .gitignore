@@ -1,1 +1,4 @@
 node_modules/
+clinic.db
+clinic.db-shm
+dist/
