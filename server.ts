@@ -420,29 +420,34 @@ async function startServer() {
       res.sendFile(path.join(_dirname, 'dist', 'index.html'));
     });
   }
-  async function logAction(action: string, details: string) {
-  try {
-    await db.run(
-      'INSERT INTO audit_logs (action, details) VALUES (?, ?)',
-      [action, details]
-    );
-    console.log([AUDIT LOG]: ${action} - ${details});
-  } catch (error) {
-    console.error("Critical: Audit log failed", error);
-  }
-}
-  // Global Error Handler
-  app.use((err, req, res, next) => {
-    console.error("SERVER ERROR LOG:", err.stack); // Logs the error in your Render dashboard
+
+// --- Global Error Handler ---
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error("SERVER ERROR LOG:", err.stack);
     res.status(500).json({
       error: "Internal Server Error",
       message: "The clinic system encountered an issue. Please try again later."
     });
   });
 
+  // --- Start Server ---
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(Server running on http://localhost:${PORT});
   });
-}
 
+// --- Start the System ---
 startServer();
+
+// --- NFR: Global Audit Logging Function ---
+async function logAction(action: string, details: string) {
+  try {
+    await db.run(
+      INSERT INTO audit_logs (action, details) VALUES (?, ?),
+      [action, details]
+    );
+    console.log([AUDIT]: ${action} - ${details});
+  } catch (error) {
+    console.error("Audit logging failed:", error);
+  }
+}
+} 
