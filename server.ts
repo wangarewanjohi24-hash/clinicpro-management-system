@@ -40,14 +40,7 @@ async function initDb() {
     action TEXT,
     details TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `);
-           details TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-    ');
-    
-    console.log("Non-Functional Requirement tables and indexes initialized.");
+  ); 
 
     CREATE TABLE IF NOT EXISTS doctors (
       id INTEGER PRIMARY KEY ${AUTO_INC},
@@ -119,6 +112,7 @@ async function initDb() {
   } catch (error) {
     console.error("Migration error:", error);
   }
+
 
   // Seed some data if none exist
   const doctorCount = await db.get('SELECT count(*) as count FROM doctors') as { count: number };
@@ -426,6 +420,17 @@ async function startServer() {
       res.sendFile(path.join(_dirname, 'dist', 'index.html'));
     });
   }
+  async function logAction(action: string, details: string) {
+  try {
+    await db.run(
+      'INSERT INTO audit_logs (action, details) VALUES (?, ?)',
+      [action, details]
+    );
+    console.log([AUDIT LOG]: ${action} - ${details});
+  } catch (error) {
+    console.error("Critical: Audit log failed", error);
+  }
+}
   // Global Error Handler
   app.use((err, req, res, next) => {
     console.error("SERVER ERROR LOG:", err.stack); // Logs the error in your Render dashboard
