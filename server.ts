@@ -358,10 +358,10 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = process.cwd() ;
-    app.use(express.static(distPath));
+    const _dirname = path.resolve();
+    app.use(express.static(path.join(_dirname,'dist')));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      res.sendFile(path.join(_dirname, 'dist', 'index.html'));
     });
   }
 
