@@ -152,7 +152,7 @@ async function startServer() {
   });
 
   app.post('/api/patients', async (req, res) => {
-    const { name, age, gender, blood_group, weight, height, medical_history } = req.body;
+    const { name, contact, age, gender, blood_group, weight, height, medical_history } = req.body;
 
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ error: "Invalid Name: Name must be at least 2 characters." });
@@ -431,9 +431,9 @@ async function startServer() {
       message: "The clinic system encountered an issue. Please try again later."
     });
   });
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  const finalport =Number(process.env.PORT) || 3000;
+  app.listen(finalport, '0.0.0.0', () => {
+    console.log(`Server running on http://localhost:${finalport}`);
   });
 } // Closes startServer
 
@@ -444,7 +444,7 @@ startServer();
 async function logAction(action: string, details: string) {
   try {
     // We use backticks (`) to allow the SQL to span multiple lines safely
-    await db.run(
+    await (db as any).run(
       `INSERT INTO audit_logs (action, details) VALUES (?, ?)`,
       [action, details]
     );
