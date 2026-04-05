@@ -23,7 +23,9 @@ export default function App() {
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE = typeof window !== 'undefined' ? window.location.origin : '';
+  const API_BASE = typeof window !== 'undefined' &&   window.location.hostname ==='localhost'
+  ?'http://localhost:3000'
+   : '';
 
   useEffect(() => {
     fetchData();
