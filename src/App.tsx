@@ -25,7 +25,7 @@ export default function App() {
 
   const API_BASE = typeof window !== 'undefined' &&   window.location.hostname ==='localhost'
   ?'http://localhost:3000'
-   : '';
+   : 'https://clinipro-management-system-3.onrender.com';
 
   useEffect(() => {
     fetchData();
