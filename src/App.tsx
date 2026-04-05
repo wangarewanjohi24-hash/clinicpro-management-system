@@ -65,8 +65,7 @@ export default function App() {
     }
   };
 
-    const filteredPatients = patients.filter(p =>
-    (p :any) =>
+    const filteredPatients = patients.filter((p: Patient) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.contact.includes(searchQuery)
     );
