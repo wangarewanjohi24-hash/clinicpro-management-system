@@ -23,9 +23,9 @@ export default function App() {
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE = typeof window !== 'undefined' &&   window.location.hostname ==='localhost'
+  const API_BASE =  window.location.hostname ==='localhost'
   ?'http://localhost:3000'
-   : 'https://clinipro-management-system-3.onrender.com';
+   : 'https://clinipro-management-system-3.onrender.com/graphql';
 
   useEffect(() => {
     fetchData();
