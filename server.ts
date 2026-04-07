@@ -136,27 +136,35 @@ async function initDb() {
 }
 async function startServer() {
   await initDb();
+  
   const app = express();
-const PORT = process.env.PORT || 3000;
-const server = new ApolloServer({
+  const PORT = process.env.PORT || 3000;
+
+  const server = new ApolloServer({
     typeDefs,
     resolvers,
   });
 
+  // You must start Apollo before applying middleware
+  await server.start();
+
+  // Middleware setup
   app.use(cors());
   app.use(express.json());
 
-  // API Routes
-  // Patients
+  // This connects Apollo to your Express app at the /graphql endpoint
+  app.use('/graphql', expressMiddleware(server));
+
+  // Keep your existing REST routes below if you want them to still work
   app.get('/api/patients', async (req, res) => {
     try {
-      const patients = await db.query('SELECT * FROM patients ORDER BY name ASC');
+      const patients = await db.query('SELECT * FROM patients ORDER BY name');
       res.json(patients);
     } catch (error) {
-      console.error('Error fetching patients:', error);
       res.status(500).json({ error: 'Failed to fetch patients' });
     }
   });
+
 
   app.post('/api/patients', async (req, res) => {
     const { name, contact, age, gender, blood_group, weight, height, medical_history } = req.body;
@@ -446,9 +454,6 @@ const server = new ApolloServer({
   });
 } // Closes startServer
 
-// --- Start the System ---
-startServer();
-
 // --- NFR: Global Audit Logging Function ---
 async function logAction(action: string, details: string) {
   try {
@@ -462,3 +467,4 @@ async function logAction(action: string, details: string) {
     console.error("Critical: Audit log failed", error);
   }
 }
+startServer();
