@@ -1,26 +1,26 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
+
+    /* Change this line from "bundler" to "node" */
+    "moduleResolution": "node",
+    
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/": ["./src/"]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    
+    /* Add these two lines to help find Express and Node types */
+    "types": ["node", "express"],
+    "esModuleInterop": true
   }
 }
