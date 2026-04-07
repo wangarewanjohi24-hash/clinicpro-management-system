@@ -3,8 +3,10 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import * as db from './db';
-import { Server } from 'tls';
+import * as db from './db.js';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { typeDefs, resolvers } from './src/schemas/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,11 +134,14 @@ async function initDb() {
     await db.query('INSERT INTO services (name, description, price) VALUES (?, ?, ?)', ['Blood Test', 'Comprehensive blood analysis', 45.00]);
   }
 }
-
 async function startServer() {
   await initDb();
   const app = express();
-  const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
 
   app.use(cors());
   app.use(express.json());
@@ -409,6 +414,8 @@ async function startServer() {
       res.status(500).json({ error: 'Failed to fetch stats' });
     }
   });
+  await server.start();
+  app.use('/graphql', expressMiddleware(server));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

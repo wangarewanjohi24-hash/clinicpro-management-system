@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isToday, parseISO } from 'date-fns';
-import { cn } from './lib/utils';
+import { cn } from './lib/utils.js';
 import {
   Users, Activity, Stethoscope, Pill, History, UserCheck,
   ClipboardList, CreditCard, ShieldCheck, LayoutDashboard,
